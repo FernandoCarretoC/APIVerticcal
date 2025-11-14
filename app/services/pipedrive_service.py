@@ -1,5 +1,5 @@
 import httpx
-from typing import Optional, List, Dict
+from typing import Optional, List
 from app.core.config import settings
 from app.core.exceptions import (
     CRMException,

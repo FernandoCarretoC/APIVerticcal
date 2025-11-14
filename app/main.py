@@ -1,7 +1,6 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import uvicorn
 
 from app.api.routes import crm_router
 from app.core.config import settings
