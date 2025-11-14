@@ -351,7 +351,7 @@ https://xxxx-xx-xx.ngrok-free.app/crm/contact
 3. En la ventana emergente, enviar un mensaje de ejemplo como los siguientes:
 ```
 1. “Crea a Ana Gómez con email ana.gomez@ejemplo.com y teléfono +57 315 222 3344.”
-2. “Agrega una nota al contacto de Ana: ‘Solicita demo del plan Pro’”
+2. “Agrega una nota al contacto de ana.gomez@ejemplo.com: ‘Solicita demo del plan Pro’”
 3. “Actualiza el estado de Ana a ‘Qualified’ y su teléfono a +57 320 000 1122.”
 ```
 4. El agente debe responder indicando que el flujo está funcionando.
