@@ -29,8 +29,8 @@ API REST para integración conversacional con Pipedrive CRM mediante agente n8n.
 
 ### 1. Clonar el repositorio
 ```bash
-git clone <tu_repo_url>
-cd <nombre_del_repo>
+git clone https://github.com/FernandoCarretoC/APIVerticcal.git
+cd APIVerticcal
 ```
 ### 2. Crear entorno virtual
 ```bash
