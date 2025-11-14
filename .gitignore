@@ -1,0 +1,52 @@
+# -----------------------
+# Archivos de entorno
+# -----------------------
+.env
+
+# -----------------------
+# Archivos y carpetas de Python
+# -----------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.log
+
+# -----------------------
+# Virtual env
+# -----------------------
+venv/
+.env/
+.venv/
+
+# -----------------------
+# FastAPI / Uvicorn
+# -----------------------
+*.pid
+
+# -----------------------
+# IDEs y editores
+# -----------------------
+.vscode/
+.idea/
+*.iml
+
+# -----------------------
+# Sistema operativo
+# -----------------------
+.DS_Store
+Thumbs.db
+
+# -----------------------
+# Cache de herramientas
+# -----------------------
+.mypy_cache/
+.pytest_cache/
+.cache/
+.coverage
+htmlcov/
