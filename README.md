@@ -19,6 +19,9 @@ API REST para integración conversacional con Pipedrive CRM mediante agente n8n.
 
 - **Python 3.8+**
 - **Cuenta de Pipedrive** con API Token
+- **N8N**
+- **Git**
+- **API Key de modelo de IA**
 
 ---
 
@@ -226,3 +229,130 @@ Solución: usar el ID numérico del contacto.
 }
 ```
 
+# ⚙️ Integración del Workflow Conversacional con n8n
+
+Este documento describe el proceso completo para ejecutar n8n, importar el workflow y conectarlo con una API local desarrollada en FastAPI.
+
+---
+
+## 1. Ejecutar n8n
+
+### ▶️ Si tienes N8N instalado en Local
+
+```bash
+n8n start
+```
+
+Interfaz disponible en: http://localhost:5678
+
+### 🟦 Si tienes n8n Cloud
+
+Acceso directo: https://app.n8n.cloud
+
+### 🐳 Docker
+
+```bash
+docker run -it --rm \
+  --name n8n \
+  -p 5678:5678 \
+  -v ~/.n8n:/home/node/.n8n \
+  n8nio/n8n
+```
+
+---
+
+## 2. Importar el workflow
+
+| Paso | Acción |
+|------|--------|
+| 1 | Abrir la interfaz de n8n |
+| 2 | Ir a **Workflows** |
+| 3 | Seleccionar **Add Workflow** o ícono "+" |
+| 4 | Elegir **Import from File** |
+| 5 | Cargar: `n8n/FlujoPruebaTecnica.json` |
+| 6 | Confirmar importación |
+
+El flujo aparecerá listo con todos los nodos preconfigurados.
+
+---
+
+## 3. Configurar el Chat Agent (Gemini)
+
+El workflow se basa en un agente conversacional que usa IA para interpretar comandos.
+
+### 🔧 Configuración del modelo
+
+1. Abrir el nodo: **AI Agent / Chat Agent**
+2. En **Model**, crear credenciales nuevas
+3. **API Key** desde: https://makersuite.google.com/app/apikey
+4. Modelo recomendado:
+
+```
+gemini-2.5-flash
+```
+
+5. Guardar
+
+---
+
+## 4. Ajustar endpoints en los HTTP Request
+
+Los nodos HTTP deben apuntar correctamente a la API FastAPI según el entorno:
+
+### 🖥️ n8n local: Configurar los nodos HTTP Request
+
+```
+http://0.0.0.0:8000/crm/contact
+http://0.0.0.0:8000/crm/contact/note
+```
+
+### 🐳 Docker (macOS / Windows)
+
+```
+http://host.docker.internal:8000/crm/contact
+http://host.docker.internal:8000/crm/contact/note
+```
+
+### 🐧 Docker (Linux)
+
+```
+http://172.17.0.1:8000/crm/contact
+http://172.17.0.1:8000/crm/contact/note
+```
+
+### 🌐 n8n Cloud → API Local
+
+Requiere túnel. Ejemplo con ngrok:
+
+```bash
+ngrok http 8000
+```
+
+ngrok generará una URL temporal del tipo:
+
+```
+https://xxxx-xx-xx.ngrok-free.app
+```
+
+Usar esa URL en todos los HTTP Request:
+
+```
+https://xxxx-xx-xx.ngrok-free.app/crm/contact
+```
+
+---
+
+## 5. Probar el chat integrado
+
+### 🧪 Procedimiento
+
+1. Ubicar el nodo **Chat Trigger**
+2. Clic en **Test Chat / Open Chat**
+3. En la ventana emergente, enviar un mensaje de ejemplo como los siguientes:
+```
+1. “Crea a Ana Gómez con email ana.gomez@ejemplo.com y teléfono +57 315 222 3344.”
+2. “Agrega una nota al contacto de Ana: ‘Solicita demo del plan Pro’”
+3. “Actualiza el estado de Ana a ‘Qualified’ y su teléfono a +57 320 000 1122.”
+```
+4. El agente debe responder indicando que el flujo está funcionando.
+4.1 Reenviar mensaje de ser necesario para activar flujo
