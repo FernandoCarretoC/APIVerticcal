@@ -1,0 +1,499 @@
+{
+  "name": "Prueba",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Extrae el JSON de la respuesta del AI Agent\nconst response = $input.item.json.output || $input.item.json.text || '';\n\n// Intenta parsear el JSON\nlet parsed;\ntry {\n  // Limpia posibles marcadores de código\n  let cleanResponse = response.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  \n  // Si la respuesta contiene múltiples líneas, intenta encontrar el JSON\n  if (cleanResponse.includes('{')) {\n    const startIndex = cleanResponse.indexOf('{');\n    const endIndex = cleanResponse.lastIndexOf('}') + 1;\n    cleanResponse = cleanResponse.substring(startIndex, endIndex);\n  }\n  \n  parsed = JSON.parse(cleanResponse);\n} catch (error) {\n  // Si no se puede parsear, crear un objeto de error\n  parsed = {\n    intencion: 'error',\n    datos: {},\n    error: 'No se pudo interpretar la respuesta: ' + response\n  };\n}\n\nreturn {\n  intencion: parsed.intencion || 'indefinida',\n  datos: parsed.datos || {},\n  originalResponse: response\n};"
+      },
+      "id": "1153d02a-0315-4b6b-8323-5161ea0f34d7",
+      "name": "Parse JSON Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -2096,
+        1616
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "crear-contacto",
+                    "leftValue": "={{ $json.intencion }}",
+                    "rightValue": "crear_contacto",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Crear Contacto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "crear-nota",
+                    "leftValue": "={{ $json.intencion }}",
+                    "rightValue": "crear_nota",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Crear Nota"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "actualizar-contacto",
+                    "leftValue": "={{ $json.intencion }}",
+                    "rightValue": "actualizar_contacto",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Actualizar Contacto"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ec976912-4719-40ad-a66c-098f2aae0ee7",
+      "name": "Switch by Intention",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        -1888,
+        1600
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://0.0.0.0:8000/crm/contact",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify({\n    name: $json.datos.nombre,\n    email: $json.datos.email,\n    phone: $json.datos.telefono\n  })\n}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "56a270b6-4072-4890-a077-1ff76c62e536",
+      "name": "POST Create Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -1664,
+        1456
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://0.0.0.0:8000/crm/contact/note",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify({\n    contact_identifier: $json.datos.contact_id,\n    content: $json.datos.content\n  })\n}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "caa45b7e-4ad0-430f-854f-3be163957cf6",
+      "name": "POST Create Note",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -1664,
+        1616
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "http://0.0.0.0:8000/crm/contact",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify({\n    contact_identifier: $json.datos.contact_id,\n    fields: $json.datos.fields\n  })\n}}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "f4f09b03-d2da-4b98-a392-c6a53fb0f5ef",
+      "name": "PATCH Update Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -1664,
+        1808
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "jsCode": "// Formatea la respuesta para el usuario\nconst apiResponse = $input.item.json;\n\nlet mensaje = '';\nlet success = true;\n\nif (apiResponse.message || apiResponse.mensaje) {\n  mensaje = apiResponse.message || apiResponse.mensaje;\n} else if (apiResponse.error) {\n  mensaje = `Error: ${apiResponse.error}`;\n  success = false;\n} else {\n  mensaje = 'Operación completada exitosamente';\n}\n\nreturn {\n  output: mensaje,\n  success: success,\n  data: apiResponse\n};"
+      },
+      "id": "d7108e8f-b22e-4d3b-a1ef-e4c89d70176d",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1440,
+        1616
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Eres un asistente virtual especializado en gestión de contactos CRM. Tu función es ayudar a los usuarios a gestionar contactos de manera eficiente y conversacional.\nAdemás, debes manejar mensajes coloquiales y conversaciones informales SIN activar intenciones ni enviar JSON cuando no exista una acción clara de CRM.\n\n🧠 DETECCIÓN DE MENSAJES CONVERSACIONALES / COLOQUIALES\n\nAntes de procesar cualquier instrucción:\n\nSi el mensaje del usuario es coloquial, social, informal, saludo o conversación ligera, como por ejemplo:\n\n“hola”, “buenas”, “qué tal”, “cómo estás”\n\nmensajes sin verbo de acción\n\nmensajes que no indican crear, actualizar o agregar algo\n\nmensajes ambiguos sin ninguna intención de CRM\n\nmensajes que no piden explícitamente una acción\n\nEntonces:\n\n✅ NO debes generar JSON\n✅ NO debes detectar intención CRM\n✅ Debes responder con un mensaje natural y breve\nEjemplos:\n\n“¡Hola! ¿En qué puedo ayudarte hoy?”\n\n“Claro, ¿qué deseas gestionar en el CRM?”\n\n“Aquí estoy para ayudarte con contactos, notas o actualizaciones.”\n\nEN ESTOS CASOS RESPONDE INMEDIATAMENTE EN EL CHAT TRIGGER\n\n🧠 SOLO cuando detectes una intención clara de CRM (crear, actualizar, agregar nota) deberás generar JSON.\n\nSi no existe intención → responde normal (NO JSON).\n\n🎯 TUS CAPACIDADES CRM\n\nPuedes realizar tres acciones:\n\nCrear Contacto\n\nActualizar Contacto\n\nCrear Nota\n\n📌 FORMATO DE RESPUESTA SOLO PARA INTENCIONES CRM\n\n(Si NO hay intención → NO usar nada de esto)\n\nCuando sí haya intención, el formato será:\n\nCREAR CONTACTO\n{\"intencion\":\"crear_contacto\",\"datos\":{\"nombre\":\"Nombre\",\"email\":\"correo\",\"telefono\":\"+57 ...\"}}\n\nCREAR NOTA\n{\"intencion\":\"crear_nota\",\"datos\":{\"contact_id\":\"correo@dominio.com\",\"content\":\"texto\"}}\n\nACTUALIZAR CONTACTO\n{\"intencion\":\"actualizar_contacto\",\"datos\":{\"contact_id\":\"correo@dominio.com\",\"fields\":{\"phone\":\"+57 ...\"}}}\n\n⚠️ REGLAS CRÍTICAS PARA INTENCIONES CRM\n\n(Solo aplican si HAY intención. Si no hay → responde normal)\n\nCREAR CONTACTO\n\nNombre obligatorio\n\nEmail y teléfono opcionales\n\nTeléfono siempre con formato internacional\n\nCampos en español para creación\n\nACTUALIZAR CONTACTO\n\nSolo enviar campos explícitos\n\nCampos en inglés dentro de “fields”\n\nCREAR NOTA\n\nRequiere identificador y contenido\n\nMULTIPLES PETICIONES\n\nSi pide más de una acción → generar múltiple JSON (array)\nEj:\n\n{\"acciones\":[{...},{...}]}\n\n❗ SI FALTAN DATOS NECESARIOS\n\n(Solo si hay intención de CRM)\n\nFalta nombre → preguntar\n\nFalta contenido de nota → preguntar\n\nFalta qué campo actualizar → preguntar\n\n🚫 RESPUESTAS PROHIBIDAS CUANDO HAY INTENCIÓN\n\n❌ Markdown\n❌ Explicaciones\n❌ Texto adicional fuera del JSON\n❌ Campos no mencionados\n\n🧩 REGLA FINAL\n\nSi el mensaje es coloquial → NO JSON, SOLO una respuesta natural.\nSi hay intención clara → SOLO JSON, en una sola línea."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -2416,
+        1616
+      ],
+      "id": "5e5bb3c6-8303-4db7-b1fa-b9f7540be7c3",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -2576,
+        1808
+      ],
+      "id": "f0ab2e0a-9494-4871-b109-8d968f013830",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "UoMa9wDkDT150QdQ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -2752,
+        1616
+      ],
+      "id": "6bb7f50a-c945-498b-b464-3152a2a0f9a3",
+      "name": "When chat message received",
+      "webhookId": "a443da68-bb24-412b-b4ce-9169d1fa9ad1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2368,
+        1888
+      ],
+      "id": "4c0285f8-476e-42aa-b672-935eabd2b3aa",
+      "name": "Memory"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        1616
+      ],
+      "id": "53c99b23-28ec-4f4d-92e6-ef5aa7856e7f",
+      "name": "Respond to Chat"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json) }}",
+        "options": {
+          "systemMessage": "Eres un asistente conversacional que debe responder al usuario final de manera natural, clara y amable, basándote exclusivamente en el JSON recibido desde el nodo anterior.\n\nTu única tarea es convertir la respuesta JSON recibida en un mensaje natural para el usuario.\nNo debes inventar datos.\nNO debes crear JSON.\nSolo debes interpretar y responder en lenguaje natural.\n\nEl nodo anterior te envía un JSON con esta estructura:\n\n{\n  \"output\": \"mensaje procesado por la API\",\n  \"success\": true/false,\n  \"data\": { ...objeto completo enviado por la API ... }\n}\n\n\nTu trabajo es:\n\n🔍 REGLA 1 – SI success = false (hubo error)\n\nResponde con:\n\nUn mensaje claro y breve\n\nExplica el error\n\nSi existe data.error, muéstralo\n\nEjemplo:\n\nOcurrió un error procesando tu solicitud: [error].\n\n🔍 REGLA 2 – SI ES CREACIÓN DE CONTACTO (nuevo)\n\nDetectar mediante:\n\ndata.creado === true\n\nO un mensaje similar a \"creado exitosamente\"\n\nResponder así:\n\nContacto creado correctamente.\nNombre: X\nCorreo: X\nTeléfono: X\n\nLos datos vienen en:\n\ndata.contacto\n\n🔍 REGLA 3 – SI EL CONTACTO YA EXISTE\n\nCuando la API responde cosas como:\n\n“El contacto ya existe”\n\n“Ya existe con el correo…”\n\nO data.existe === true\n\nDebes responder:\n\nEl contacto ya existe. Aquí tienes su información:\nNombre: X\nCorreo: X\nTeléfono: X\nID: X\n\nLos datos vienen en:\n\ndata.contacto\n\n🔍 REGLA 4 – SI ES UNA NOTA CREADA\n\nDetectar mediante:\n\ndata.nota\n\ndata.type === 'nota'\n\nmensaje incluye “nota creada”\n\nResponder:\n\nLa nota fue agregada correctamente.\nContenido: X\nContacto: X (si viene)\n\n🔍 REGLA 5 – SI ES UNA ACTUALIZACIÓN DE CONTACTO\n\nDetectar mediante:\n\ndata.actualizado === true\n\nO mensaje contiene “actualizado”\n\nResponder:\n\nEl contacto fue actualizado correctamente.\nCambios aplicados:\n\nTeléfono / campo modificado (si aplica)\n\nDatos vienen en:\n\ndata.actualizacion\n\n\no similares.\n\n🔍 REGLA 6 – SI NO SE IDENTIFICA NINGUNA CATEGORÍA\n\nResponder con el valor de “output”:\n\n{output}\n\n🤖 NO DEBES HACER\n\n❌ No generar JSON\n❌ No repetir todo el JSON\n❌ No inventar campos\n❌ No explicar procesos técnicos\n\n📌 RESULTADO PARA EL CASO 4\n\nCon este prompt, el agente final responderá así automáticamente:\n\nEl contacto ya existe. Aquí tienes su información:\nNombre: Prueba\nCorreo: prueba@prueba.com\n\nTeléfono: +57 11111111\nID: 1234"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -1248,
+        1616
+      ],
+      "id": "509b6cb2-d39b-486f-9c83-d51a15deef27",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        1824
+      ],
+      "id": "090439fd-260c-43d5-b445-561a5b8c0547",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "byR4V5wxbv94YGIM",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -1136,
+        1856
+      ],
+      "id": "2caaee4e-ec0b-4b09-873d-3a0223d4a33a",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Parse JSON Response": {
+      "main": [
+        [
+          {
+            "node": "Switch by Intention",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch by Intention": {
+      "main": [
+        [
+          {
+            "node": "POST Create Contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "POST Create Note",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PATCH Update Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Create Contact": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Create Note": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PATCH Update Contact": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON Response",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat": {
+      "main": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4aa36eb4-2afc-426e-abf4-c64ff1cb7bb7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "437fdfae846c6acc98770d6e2c052a9cae1aab327fd5228e6c70f8639e6ce4f1"
+  },
+  "id": "fJrSU2dg2Grd4SrW",
+  "tags": []
+}
